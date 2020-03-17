@@ -1,0 +1,77 @@
+filepath = **** product file ****
+
+import pandas as pd                                     # import pandas library
+df0 = pd.read_table(filepath,sep=",", engine="python")  # Read the file as a table
+
+store = df0['STORE']
+store[0] = 'exclude'
+
+c = 0
+head = 'https://www.etsy.com/shop/'
+
+unique_store = []
+for i in range(len(store)):
+    if store[i] not in unique_store:
+        unique_store.append(store[i])
+
+mylist = []
+for i in range(len(unique_store)):
+    link = ''
+    link = "%s%s" % (head, unique_store[i])
+    mylist.append(link)
+
+s = mylist
+
+from bs4 import BeautifulSoup
+from urllib.request import urlopen, Request
+import datetime
+
+now = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+start = now
+
+print(start)
+etsy = []
+
+id = 0
+# print(len(s))
+
+for i in range(len(s)):
+    id=0
+    pasteURL = s[i]
+    try:
+        data = urlopen(Request(pasteURL, headers={'User-Agent': 'Mozilla'})).read()
+        parse = BeautifulSoup(data, features="lxml")
+    except:
+        continue
+    try:
+        for dolar in parse.find_all('span', attrs={"class": "b text-title display-block"}):
+            etsy = list(dolar)
+            if id == 0:
+                sales = etsy[0]
+                print('Store      : ', unique_store[i])
+                print('Link       : ', s[i])
+                print("Sales      : ", sales)
+                id = id + 1
+            else:
+                year_ac = etsy[0]
+                print("Year Active: ", year_ac)
+        try:
+            if store[i] == 'exclude':
+                continue
+
+            if len(parse.find_all('span', attrs={"class": "b text-title display-block"})) == 0:
+                continue
+
+            if len(parse.find_all('span', attrs={"class": "shop-location"})) == 0:
+                print('Location   : ', '-')
+                print("")
+            for k in parse.find_all('span', attrs={"class": "shop-location"}):
+                etsy = list(k)
+                location = etsy[0]
+                print('Location   : ', location)
+                print("")
+                break
+        except:
+            print("aaa")
+    except:
+        print('Error')
