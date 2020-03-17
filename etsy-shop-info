@@ -1,6 +1,9 @@
 filepath = **** product file ****
 
 import pandas as pd                                     # import pandas library
+pd.options.mode.chained_assignment = None  # default='warn'
+
+import numpy as np
 df0 = pd.read_table(filepath,sep=",", engine="python")  # Read the file as a table
 
 store = df0['STORE']
@@ -14,11 +17,26 @@ for i in range(len(store)):
     if store[i] not in unique_store:
         unique_store.append(store[i])
 
+store_rating = df0[['STORE', 'STORE_RATING']]
+store_rating = store_rating.drop_duplicates()
+
+avg_price = df0[['STORE', 'PRICE']]
+avg_price['PRICE'] = avg_price['PRICE'].str.split(",")
+avg_price['PRICE'] = avg_price['PRICE'].str[0]
+avg_price['PRICE'] = avg_price['PRICE'].astype('int')
+avg_price = avg_price.groupby('STORE').mean().astype('int')
+
+store_rating = store_rating.merge(avg_price, on='STORE')
+#print(store_rating)
+
 mylist = []
 for i in range(len(unique_store)):
     link = ''
     link = "%s%s" % (head, unique_store[i])
     mylist.append(link)
+
+#store_df = pd.DataFrame(unique_store, columns=['STORE'])
+#print(store_df)
 
 s = mylist
 
@@ -38,6 +56,10 @@ id = 0
 for i in range(len(s)):
     id=0
     pasteURL = s[i]
+    data = [unique_store[i]]
+    temp = pd.DataFrame(data, columns = ['STORE'])
+    #temp = pd.DataFrame([(unique_store[i])], columns='STORE')
+    #print(temp)
     try:
         data = urlopen(Request(pasteURL, headers={'User-Agent': 'Mozilla'})).read()
         parse = BeautifulSoup(data, features="lxml")
@@ -64,14 +86,47 @@ for i in range(len(s)):
 
             if len(parse.find_all('span', attrs={"class": "shop-location"})) == 0:
                 print('Location   : ', '-')
-                print("")
             for k in parse.find_all('span', attrs={"class": "shop-location"}):
                 etsy = list(k)
                 location = etsy[0]
                 print('Location   : ', location)
-                print("")
                 break
         except:
             print("aaa")
     except:
         print('Error')
+
+    store_detail = pd.merge(temp, store_rating, how='left', on='STORE')
+    srating = store_detail['STORE_RATING'].to_string(index=False)
+    srating = float(srating)
+    savgp = store_detail['PRICE'].to_string(index=False)
+    savgp = int(savgp)
+    print('Rating     : ', srating)
+    print('Avg. Price : ', savgp)
+    print("")
+
+
+
+    #srating = pd.merge(store_rating, temp, how='left', on='STORE')
+    #print(srating)
+
+    #srating = store_rating.at(unique_store[i], 'STORE_RATING')
+    #print(srating)
+
+    # SQLETSY = (unique_store[i], s[i], sales, year_ac,location)
+    #
+    # try:
+    #     connection = mysql.connector.connect(host='localhost',
+    #                                          database='ETSY',
+    #                                          user='administrator',
+    #                                          password='Ankara06')
+    #
+    #     sql_execute = "INSERT INTO ETSY (STORE, LINK, SALES, YEAR_ACTIVE, LOCATION) VALUES (%s,%s,%s,%s,%s)"
+    #     if connection.is_connected():
+    #         db_Info = connection.get_server_info()
+    #         cursor = connection.cursor()
+    #         cursor.execute(sql_execute, SQLSOUUS)
+    #         connection.commit()
+    #         record = cursor.fetchone()
+    # except Error as e:
+    #     print("Error while connecting to MySQL", e)
