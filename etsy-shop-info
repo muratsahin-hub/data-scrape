@@ -118,8 +118,8 @@ for i in range(len(s)):
     # try:
     #     connection = mysql.connector.connect(host='localhost',
     #                                          database='ETSY',
-    #                                          user='administrator',
-    #                                          password='Ankara06')
+    #                                          user='***',
+    #                                          password='***')
     #
     #     sql_execute = "INSERT INTO ETSY (STORE, LINK, SALES, YEAR_ACTIVE, LOCATION) VALUES (%s,%s,%s,%s,%s)"
     #     if connection.is_connected():
